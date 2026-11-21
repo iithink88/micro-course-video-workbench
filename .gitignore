@@ -1,0 +1,24 @@
+# 临时/缓存
+__pycache__/
+*.pyc
+*.pyo
+*.log
+*.tmp
+
+# 剪辑产物（素材与成片不入库）
+*.mp4
+*.srt
+*.ass
+*.vtt
+auto_edit_plan.json
+auto_mix_plan.json
+
+# 密钥与环境（切勿提交）
+.env
+*.env
+*_plan.json
+
+# 系统
+.DS_Store
+Thumbs.db
+desktop.ini
