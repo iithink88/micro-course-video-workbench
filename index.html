@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微课视频工作台 · 京灵智创</title>
+<style>
+:root{
+  --bg1:#eef2ff; --bg2:#f5f3ff; --bg3:#ecfeff;
+  --card:rgba(255,255,255,.82); --card-solid:#ffffff;
+  --ink:#1e293b; --ink2:#475569; --muted:#94a3b8;
+  --brand:#4f46e5; --brand2:#7c3aed; --cyan:#0891b2; --pink:#db2777;
+  --line:rgba(99,102,241,.16); --shadow:0 10px 40px -12px rgba(79,70,229,.28);
+  --glow:0 0 24px rgba(124,58,237,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  color:var(--ink); min-height:100vh; position:relative; overflow-x:hidden;
+  background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 45%,var(--bg3) 100%);
+  background-attachment:fixed;
+}
+/* 光斑 */
+.orb{position:fixed;border-radius:50%;filter:blur(70px);opacity:.5;z-index:0;pointer-events:none;animation:float 14s ease-in-out infinite}
+.orb.a{width:420px;height:420px;background:#a5b4fc;top:-120px;left:-100px}
+.orb.b{width:380px;height:380px;background:#f0abfc;top:30%;right:-120px;animation-delay:-5s}
+.orb.c{width:340px;height:340px;background:#67e8f9;bottom:-120px;left:30%;animation-delay:-9s}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-30px) scale(1.12)}}
+.wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:0 24px 80px}
+
+/* Hero */
+.hero{padding:52px 0 30px;display:flex;justify-content:space-between;align-items:flex-end;gap:30px;flex-wrap:wrap}
+.hero h1{font-size:40px;line-height:1.15;letter-spacing:-1px;font-weight:800;
+  background:linear-gradient(100deg,#4f46e5,#7c3aed 45%,#0891b2);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .sub{color:var(--ink2);font-size:15px;margin-top:12px;max-width:640px;line-height:1.7}
+.hero .badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.7);border:1px solid var(--line);
+  padding:6px 14px;border-radius:99px;font-size:12px;color:var(--brand2);font-weight:600;margin-bottom:16px;backdrop-filter:blur(10px)}
+.stats{display:flex;gap:14px;flex-wrap:wrap}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 24px;min-width:110px;
+  backdrop-filter:blur(16px);box-shadow:var(--shadow);text-align:center}
+.stat .n{font-size:30px;font-weight:800;background:linear-gradient(120deg,#4f46e5,#0891b2);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .l{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* Tabs */
+.tabs{display:flex;gap:8px;margin:8px 0 26px;background:rgba(255,255,255,.6);padding:7px;border-radius:18px;
+  border:1px solid var(--line);backdrop-filter:blur(16px);width:max-content;max-width:100%;flex-wrap:wrap}
+.tab{border:0;background:transparent;padding:12px 22px;border-radius:13px;font-size:14px;font-weight:700;color:var(--ink2);
+  cursor:pointer;transition:.25s;display:flex;align-items:center;gap:9px;white-space:nowrap}
+.tab .ic{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font-size:13px;color:#fff}
+.tab:hover{background:rgba(99,102,241,.08)}
+.tab.on{background:#fff;color:var(--brand);box-shadow:0 6px 20px -6px rgba(79,70,229,.5)}
+.tab[data-t="browse"] .ic{background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+.tab[data-t="router"] .ic{background:linear-gradient(135deg,#0891b2,#06b6d4)}
+.tab[data-t="edit"] .ic{background:linear-gradient(135deg,#db2777,#f43f5e)}
+
+.panel{display:none;animation:fade .4s ease}
+.panel.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* 工具条 */
+.toolbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.search{flex:1;min-width:260px;position:relative}
+.search input{width:100%;padding:14px 18px 14px 46px;border-radius:14px;border:1px solid var(--line);
+  background:var(--card);font-size:14px;color:var(--ink);backdrop-filter:blur(12px);outline:none;transition:.25s}
+.search input:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(79,70,229,.1)}
+.search::before{content:"⌕";position:absolute;left:17px;top:50%;transform:translateY(-52%);font-size:22px;color:var(--muted)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:rgba(255,255,255,.6);color:var(--ink2);padding:9px 15px;border-radius:11px;
+  font-size:13px;font-weight:600;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:7px}
+.chip .dot{width:8px;height:8px;border-radius:50%}
+.chip:hover{transform:translateY(-2px);background:#fff}
+.chip.on{background:var(--brand);color:#fff;border-color:var(--brand);box-shadow:var(--glow)}
+.chip.on .dot{box-shadow:0 0 0 2px rgba(255,255,255,.5)}
+.count{color:var(--muted);font-size:13px;margin-left:auto;white-space:nowrap}
+
+/* 卡片网格 */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;cursor:pointer;
+  backdrop-filter:blur(16px);box-shadow:var(--shadow);transition:.28s;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:0 0 auto;height:4px;background:var(--accent,#6366f1);opacity:.85}
+.card:hover{transform:translateY(-6px);box-shadow:0 22px 50px -16px rgba(79,70,229,.45);border-color:rgba(99,102,241,.4)}
+.card .top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.icon{flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:18px;
+  background:var(--accent,#6366f1);box-shadow:0 8px 18px -6px var(--accent,#6366f1)}
+.card h3{font-size:16px;font-weight:800;line-height:1.3}
+.cat-tag{font-size:11px;color:var(--accent,#6366f1);font-weight:700;margin-top:3px}
+.stars{margin-left:auto;font-size:11px;color:#f59e0b;white-space:nowrap;font-weight:700}
+.card .desc{font-size:13px;color:var(--ink2);line-height:1.6;min-height:42px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
+.tag{font-size:11px;background:rgba(99,102,241,.08);color:var(--brand2);padding:4px 9px;border-radius:7px;font-weight:600}
+.card .foot{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);
+  border-top:1px dashed var(--line);padding-top:12px}
+.key-yes{color:#059669;font-weight:700}.key-no{color:#e11d48;font-weight:700}
+.rating-badge{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.9);border:1px solid var(--line);
+  padding:3px 9px;border-radius:8px;font-size:11px;font-weight:800;color:var(--brand)}
+
+/* AI 区 */
+.ai-layout{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:900px){.ai-layout{grid-template-columns:1fr}}
+.box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;backdrop-filter:blur(16px);box-shadow:var(--shadow)}
+.box h2{font-size:17px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:9px}
+.box h2 .pip{width:9px;height:9px;border-radius:50%;background:var(--brand);box-shadow:var(--glow)}
+.box .hint{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+textarea, .field{width:100%;border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:14px;
+  font-family:inherit;color:var(--ink);background:rgba(255,255,255,.75);outline:none;resize:vertical;transition:.25s}
+textarea:focus,.field:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(79,70,229,.1)}
+textarea{min-height:130px;line-height:1.6}
+.examples{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}
+.ex{border:1px solid var(--line);background:rgba(255,255,255,.6);color:var(--ink2);font-size:12px;padding:6px 11px;
+  border-radius:9px;cursor:pointer;transition:.2s}
+.ex:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
+.btn{border:0;border-radius:13px;padding:13px 22px;font-size:14px;font-weight:800;color:#fff;cursor:pointer;
+  background:linear-gradient(120deg,#4f46e5,#7c3aed);box-shadow:var(--glow);transition:.25s;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px -8px rgba(124,58,237,.7)}
+.btn.sm{padding:9px 15px;font-size:12px}
+.btn.ghost{background:rgba(255,255,255,.8);color:var(--brand);border:1px solid var(--line);box-shadow:none}
+.btn.ghost:hover{background:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.result{min-height:200px}
+.empty{display:grid;place-items:center;height:100%;min-height:220px;color:var(--muted);text-align:center;font-size:13px;line-height:1.8}
+.empty .big{font-size:40px;margin-bottom:10px;opacity:.5}
+
+.intent-tags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+.intent{font-size:12px;padding:5px 11px;border-radius:8px;font-weight:700;background:rgba(8,145,178,.1);color:var(--cyan)}
+.intent.sub{background:rgba(124,58,237,.1);color:var(--brand2)}
+
+.match{background:rgba(255,255,255,.7);border:1px solid var(--line);border-radius:15px;padding:15px;margin-bottom:11px;
+  display:flex;gap:13px;align-items:center;transition:.2s}
+.match:hover{border-color:var(--brand);transform:translateX(3px)}
+.match .rk{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;flex:none;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+.match .info{flex:1;min-width:0}
+.match .nm{font-size:14px;font-weight:800}
+.match .rs{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5}
+.score{text-align:right;flex:none}
+.score .pct{font-size:18px;font-weight:800;color:var(--brand)}
+.score .bar{width:60px;height:5px;background:rgba(99,102,241,.12);border-radius:9px;margin-top:4px;overflow:hidden}
+.score .bar i{display:block;height:100%;background:linear-gradient(90deg,#0891b2,#7c3aed);border-radius:9px}
+
+.flow{background:linear-gradient(135deg,rgba(79,70,229,.07),rgba(8,145,178,.07));border:1px solid var(--line);
+  border-radius:15px;padding:16px;margin-top:16px}
+.flow h4{font-size:13px;font-weight:800;color:var(--brand2);margin-bottom:10px}
+.flow .step{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--ink2);margin:7px 0;line-height:1.5}
+.flow .step b{background:var(--brand);color:#fff;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:11px;flex:none}
+
+.prompt-out{width:100%;min-height:110px;margin-top:10px;font-family:"Consolas","Courier New",monospace;font-size:12px}
+.notice{font-size:11px;color:var(--muted);background:rgba(245,158,11,.08);border-left:3px solid #f59e0b;
+  padding:9px 12px;border-radius:0 8px 8px 0;margin-top:12px;line-height:1.6}
+
+/* 剪辑参数 */
+.params{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:14px 0}
+.param{background:rgba(255,255,255,.7);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+.param .k{font-size:11px;color:var(--muted)}
+.param .v{font-size:13px;font-weight:800;color:var(--brand);margin-top:4px}
+.code{background:#1e293b;color:#a5f3fc;border-radius:12px;padding:15px;font-family:"Consolas",monospace;font-size:12px;
+  line-height:1.7;overflow-x:auto;white-space:pre-wrap;word-break:break-all}
+
+/* 模态框 */
+.mask{position:fixed;inset:0;background:rgba(30,41,59,.45);backdrop-filter:blur(6px);z-index:50;display:none;
+  align-items:center;justify-content:center;padding:20px}
+.mask.on{display:flex;animation:fade .25s}
+.modal{background:#fff;border-radius:22px;max-width:620px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 30px 80px -20px rgba(30,41,59,.6);padding:28px}
+.modal .mh{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.modal .mh .icon{width:52px;height:52px;font-size:21px;border-radius:16px}
+.modal h2{font-size:21px;font-weight:800}
+.modal .mcat{font-size:12px;color:var(--muted);margin-top:3px}
+.close{margin-left:auto;border:0;background:rgba(99,102,241,.08);width:34px;height:34px;border-radius:10px;
+  font-size:20px;color:var(--ink2);cursor:pointer;line-height:1}
+.close:hover{background:var(--brand);color:#fff}
+.sec{margin:18px 0}
+.sec .lbl{font-size:11px;font-weight:800;color:var(--brand2);letter-spacing:.5px;margin-bottom:7px;text-transform:uppercase}
+.sec .val{font-size:14px;color:var(--ink2);line-height:1.7}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kv .item{background:rgba(99,102,241,.05);border-radius:11px;padding:11px 13px}
+.kv .item .k{font-size:11px;color:var(--muted)}
+.kv .item .v{font-size:13px;font-weight:700;color:var(--ink);margin-top:3px;line-height:1.4}
+.trig{display:flex;gap:6px;flex-wrap:wrap}
+.trig span{background:rgba(8,145,178,.1);color:var(--cyan);font-size:12px;padding:5px 10px;border-radius:8px;font-weight:600}
+.path-code{font-family:monospace;font-size:11px;color:var(--muted);background:#f1f5f9;padding:8px 11px;border-radius:8px;word-break:break-all}
+
+/* Toast */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);background:#1e293b;color:#fff;
+  padding:12px 24px;border-radius:12px;font-size:13px;z-index:100;box-shadow:0 12px 30px rgba(0,0,0,.3);transition:.35s;opacity:0}
+#toast.on{transform:translateX(-50%) translateY(0);opacity:1}
+.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:50px;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <div class="badge">◆ 京灵智创 · 备课工作台</div>
+      <h1>微课视频工作台</h1>
+      <div class="sub">汇集本机全部视频技能：先浏览挑选，或交给视频路由 AI 按提示词自动选技能，做好的微课再用大白话全自动剪辑。从此不用自己拖时间轴。</div>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab on" data-t="browse"><span class="ic">▦</span>技能浏览</button>
+    <button class="tab" data-t="router"><span class="ic">✦</span>视频路由 AI</button>
+    <button class="tab" data-t="edit"><span class="ic">✂</span>全自动剪辑</button>
+  </nav>
+
+  <!-- 技能浏览 -->
+  <section class="panel on" id="p-browse">
+    <div class="toolbar">
+      <div class="search"><input id="q" placeholder="搜索技能、学科或关键词，如：数学、白板、字幕、古诗…"></div>
+      <div class="chips" id="catChips"></div>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <!-- 视频路由 AI -->
+  <section class="panel" id="p-router">
+    <div class="ai-layout">
+      <div class="box">
+        <h2><span class="pip"></span>说说你要做什么微课</h2>
+        <div class="hint">用大白话描述，AI 会从全部技能里挑出最合适的，并给出推荐工作流和可直接使用的提示词。</div>
+        <textarea id="rInput" placeholder="例：给初二学生讲「光的反射定律」，4 分钟，重点讲入射角等于反射角、法线怎么画，要有中文配音和大字字幕…"></textarea>
+        <div class="examples" id="rExamples"></div>
+        <div class="row">
+          <button class="btn" id="rRun">✦ 智能推荐技能</button>
+          <button class="btn ghost sm" id="rRunAI">☁ Qwen 增强</button>
+          <button class="btn ghost sm" id="rClear">清空</button>
+        </div>
+        <div class="notice">本地智能匹配无需联网、无需密钥。"Qwen 增强"需先启动本地服务并配置 DASHSCOPE_API_KEY，语义理解更准。仅看展示可直接双击本页。</div>
+      </div>
+      <div class="box">
+        <h2><span class="pip" style="background:#0891b2;box-shadow:0 0 24px rgba(8,145,178,.4)"></span>推荐结果</h2>
+        <div class="result" id="rResult">
+          <div class="empty"><div class="big">✦</div>输入需求后，这里显示 AI 为你挑选的技能<br>与推荐工作流</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 全自动剪辑 -->
+  <section class="panel" id="p-edit">
+    <div class="ai-layout">
+      <div class="box">
+        <h2><span class="pip" style="background:#db2777;box-shadow:0 0 24px rgba(219,39,119,.4)"></span>描述你的剪辑要求</h2>
+        <div class="hint">把录好的原片丢进素材文件夹（录废的不用剪），然后用大白话说清要求：用途、时长、重点、节奏。</div>
+        <textarea id="eInput" placeholder="例：这是给初二学生的课后复习微课，讲光的反射定律，控制在 4 分钟内。重点保留入射角等于反射角、法线画法、两个生活例子。开头停顿和口误剪掉，全程加中文字幕，字号大一点，配轻快 BGM 但别盖过人声，结尾留 3 秒黑屏。"></textarea>
+        <div class="examples" id="eExamples"></div>
+        <div class="field" style="margin-top:12px" >
+          <label style="font-size:12px;color:#64748b;display:block;margin-bottom:6px">素材文件夹 / 视频路径（可选，用于生成完整命令）</label>
+          <input class="field" id="ePath" placeholder="例如：D:/我的微课/光的反射/（换成你自己的路径）" style="padding:11px 14px">
+        </div>
+        <div class="row">
+          <button class="btn" id="eRun" style="background:linear-gradient(120deg,#db2777,#f43f5e)">✂ 生成剪辑方案</button>
+          <button class="btn ghost sm" id="eClear">清空</button>
+        </div>
+        <div class="notice">方案由本地规则解析，调用同目录 <b>auto_edit.py</b> 执行（底层是 <b>video-mix-edit</b> 的 <b>auto_mix.py</b>，全程本地 ffmpeg，无需密钥）。</div>
+      </div>
+      <div class="box">
+        <h2><span class="pip" style="background:#db2777;box-shadow:0 0 24px rgba(219,39,119,.4)"></span>剪辑方案预览</h2>
+        <div class="result" id="eResult">
+          <div class="empty"><div class="big">✂</div>输入要求后，这里展示解析出的剪辑参数<br>与可直接执行的命令</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">数据来源：本机 WorkBuddy 用户级技能目录 · 单击卡片查看详情 · 本页离线可用<br>工具替你剪，判断还得你自己来：成片务必逐句核对学科术语与字幕。</div>
+</div>
+
+<div class="mask" id="mask"><div class="modal" id="modal"></div></div>
+<div id="toast"></div>
+
+<script src="skills_data.js"></script>
+<script>
+const D = window.SKILLS_DATA || {categories:[],skills:[]};
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const CAT = Object.fromEntries(D.categories.map(c=>[c.id,c]));
+let activeCat='all', query='';
+
+/* ---------- 通用 ---------- */
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2200)}
+function copy(text){navigator.clipboard?.writeText(text).then(()=>toast('已复制')).catch(()=>fallbackCopy(text))||fallbackCopy(text)}
+function fallbackCopy(text){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('已复制')}catch(e){toast('复制失败，请手动选择')}ta.remove()}
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ---------- 统计 ---------- */
+$('#stats').innerHTML = `
+  <div class="stat"><div class="n">${D.skills.length}</div><div class="l">视频技能</div></div>
+  <div class="stat"><div class="n">${D.categories.length}</div><div class="l">功能分类</div></div>
+  <div class="stat"><div class="n">3</div><div class="l">工作模式</div></div>`;
+
+/* ---------- 分类筛选 ---------- */
+$('#catChips').innerHTML = `<div class="chip on" data-c="all"><span class="dot" style="background:#64748b"></span>全部</div>` +
+  D.categories.map(c=>`<div class="chip" data-c="${c.id}"><span class="dot" style="background:${c.color}"></span>${c.name}</div>`).join('');
+$('#catChips').onclick=e=>{const chip=e.target.closest('.chip');if(!chip)return;
+  $$('#catChips .chip').forEach(c=>c.classList.remove('on'));chip.classList.add('on');activeCat=chip.dataset.c;render()};
+
+$('#q').oninput=e=>{query=e.target.value.trim().toLowerCase();render()};
+
+function filtered(){
+  return D.skills.filter(s=>{
+    const catOk = activeCat==='all'||s.category===activeCat;
+    const hay = [s.name,s.desc,s.detail,s.id,...(s.triggers||[]),...(s.keywords||[])].join(' ').toLowerCase();
+    return catOk && (!query||hay.includes(query));
+  });
+}
+function render(){
+  const list=filtered();
+  $('#count').textContent=`显示 ${list.length} / ${D.skills.length} 个技能`;
+  $('#grid').innerHTML = list.length ? list.map(s=>{
+    const c=CAT[s.category]||{color:'#6366f1',name:''};
+    return `<div class="card" style="--accent:${c.color}" data-id="${s.id}">
+      <span class="rating-badge">★ ${s.rating}.0</span>
+      <div class="top"><div class="icon">${esc(s.icon)}</div>
+        <div><h3>${esc(s.name)}</h3><div class="cat-tag">${c.name}</div></div>
+        <div class="stars">${'★'.repeat(Math.min(5,s.rating))}</div></div>
+      <div class="desc">${esc(s.desc)}</div>
+      <div class="tags">${(s.keywords||[]).slice(0,4).map(k=>`<span class="tag">${esc(k)}</span>`).join('')}</div>
+      <div class="foot"><span>${esc(s.output)}</span>
+        <span class="${s.needsKey.startsWith('否')||s.needsKey==='可选(GLM_API_KEY)'?'key-no':'key-yes'}">${esc(s.needsKey)}</span></div>
+    </div>`}).join('') : `<div class="empty" style="grid-column:1/-1"><div class="big">⌕</div>没有匹配的技能，换个关键词试试</div>`;
+}
+$('#grid').onclick=e=>{const card=e.target.closest('.card');if(card)openModal(card.dataset.id)};
+
+/* ---------- 详情弹窗 ---------- */
+function openModal(id){
+  const s=D.skills.find(x=>x.id===id);if(!s)return;
+  const c=CAT[s.category]||{color:'#6366f1',name:''};
+  $('#modal').innerHTML=`
+    <div class="mh"><div class="icon" style="--accent:${c.color};background:${c.color}">${esc(s.icon)}</div>
+      <div><h2>${esc(s.name)}</h2><div class="mcat">${c.name} · ${c.desc}</div></div>
+      <button class="close" onclick="document.getElementById('mask').classList.remove('on')">×</button></div>
+    <div class="sec"><div class="lbl">一句话简介</div><div class="val">${esc(s.desc)}</div></div>
+    <div class="sec"><div class="lbl">详细说明</div><div class="val">${esc(s.detail)}</div></div>
+    <div class="sec"><div class="lbl">最适合</div><div class="val">${esc(s.bestFor)}</div></div>
+    <div class="sec"><div class="kv">
+      <div class="item"><div class="k">输出</div><div class="v">${esc(s.output)}</div></div>
+      <div class="item"><div class="k">密钥需求</div><div class="v">${esc(s.needsKey)}</div></div>
+      <div class="item"><div class="k">依赖环境</div><div class="v">${esc(s.deps)}</div></div>
+      <div class="item"><div class="k">推荐指数</div><div class="v">★ ${s.rating}.0 / 5</div></div>
+    </div></div>
+    <div class="sec"><div class="lbl">触发词 / 什么时候用它</div><div class="trig">${(s.triggers||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div></div>
+    <div class="sec"><div class="lbl">技能目录</div><div class="path-code">${esc(D.meta.skillRoot+s.path)}</div></div>
+    <div class="row"><button class="btn" id="useSkill">用这个技能（生成提示词）</button>
+      <button class="btn ghost sm" onclick="copy('${esc(s.path).replace(/'/g,"\\'")}')">复制路径</button></div>`;
+  $('#mask').classList.add('on');
+  $('#useSkill').onclick=()=>{
+    const prompt=`请用 ${s.name} 技能（${s.path}）帮我做一个微课：\n【主题/内容】\n【受众与用途】\n【时长与节奏】\n【重点要求】\n参考该技能说明：${esc(s.bestFor)}。输出：${esc(s.output)}。`;
+    $('#rInput').value=prompt;closeModal();switchTab('router');toast('已填入路由AI，补充细节后即可推荐');
+  };
+}
+function closeModal(){$('#mask').classList.remove('on')}
+$('#mask').onclick=e=>{if(e.target===$('#mask'))closeModal()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+/* ---------- Tab 切换 ---------- */
+$$('.tab').forEach(t=>t.onclick=()=>switchTab(t.dataset.t));
+function switchTab(t){
+  $$('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
+  $$('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+t));
+}
+
+/* ---------- 路由 AI：本地智能匹配 ---------- */
+const SUBJECT={
+  '数学':['数学','几何','代数','函数','方程','公式','解题','行程','面积','三角形'],
+  '物理':['物理','力学','受力','牛顿','电磁','光学','电路','反射','折射','运动','能量'],
+  '化学':['化学','反应','配平','分子','离子','氧化还原','元素','原子','溶液'],
+  '语文':['语文','古诗','诗词','汉字','识字','课文','作文','文言','阅读','字','诗'],
+  '英语':['英语','单词','词汇','英文','语法','口语'],
+  '历史':['历史','朝代','时间线','古迹','史'],
+  '地理':['地理','地图','路线','地形','区域','国家','城市'],
+  '生物':['生物','进化','细胞','植物','动物','物种','遗传'],
+  '音乐':['音乐','音符','乐谱','舞蹈','节拍','唱','歌曲']
+};
+const INTENT={
+  '解题讲题':['解题','讲题','例题','题目','怎么解','推导','算一道','讲解题'],
+  '讲解教学':['讲','定律','定理','讲透','复习','学习','重点讲'],
+  '口播讲解':['口播','讲解','解说','讲一下','介绍','科普','讲透'],
+  '宣传推广':['宣传','推广','发布','产品','品牌','广告'],
+  '说唱趣味':['说唱','rap','口诀','好记','趣味','爆款'],
+  '故事动画':['故事','动画','寓言','童话','绘本','剪影','火柴人','小学生'],
+  '国风大片':['国风','古诗','诗词','水墨','神话','传说','电影','大片','上美影','拍成'],
+  '字幕转录':['字幕','转录','识别','转文字','srt'],
+  '剪辑混剪':['剪辑','混剪','合并','拼接','掐头','去口误','转场','卡点','留','删掉'],
+  '下载素材':['下载','素材','去水印','采集','保存到本地'],
+  '数字人':['数字人','虚拟人','主播','真人出镜','口型'],
+  '白板手绘':['白板','手绘','板书','笔迹','纸张','手绘风'],
+  '地图轨迹':['地图','轨迹','路线','定位','旅行','飞线','出行']
+};
+const FORM={
+  '竖屏 9:16':['竖屏','9:16','抖音','手机看','短视频'],
+  '横屏 16:9':['横屏','16:9','1080p','B站','YouTube','电脑看'],
+  '交互网页':['网页','交互','HTML','点击','点一下'],
+  '配音字幕':['配音','字幕','中文','双语','声音']
+};
+function detect(prompt,dict){
+  const hit=[];
+  for(const [name,words] of Object.entries(dict)){
+    let score=0;for(const w of words)if(prompt.includes(w))score++;
+    if(score)hit.push({name,score,words:words.filter(w=>prompt.includes(w))});
+  }
+  return hit.sort((a,b)=>b.score-a.score);
+}
+function route(prompt){
+  const subj=detect(prompt,SUBJECT), intent=detect(prompt,INTENT), form=detect(prompt,FORM);
+  const scored=D.skills.map(s=>{
+    let sc=0,why=[];
+    (s.triggers||[]).forEach(w=>{if(prompt.includes(w)){sc+=5;why.push(w)}});
+    (s.keywords||[]).forEach(w=>{if(w.length>1&&prompt.includes(w)){sc+=3;why.push(w)}});
+    if(prompt.includes(s.name)){sc+=6;why.push(s.name)}
+    // 意图与分类映射
+    const imap={subject:['解题讲题','讲解教学'],explainer:['口播讲解','宣传推广','数字人'],text2video:['口播讲解'],
+      creative:['说唱趣味','故事动画'],motion:['白板手绘','地图轨迹','故事动画'],cinema:['国风大片','故事动画'],
+      music:['剪辑混剪'],edit:['字幕转录','剪辑混剪'],asset:['下载素材']};
+    intent.forEach(it=>{if((imap[s.category]||[]).includes(it.name)){sc+=7;why.push('意图:'+it.name)}});
+    // 学科匹配
+    const subjSkill={'数学':['edu-math-video'],'物理':['edu-physics-video'],'化学':['edu-chem-video','edu-chem-reaction'],
+      '语文':['hbg-hanzi-chaizi-video','poem-to-seedance-film'],'英语':['english-word-memory-video'],
+      '地理':['map-motion'],'生物':['wanwu-evolution-video'],'历史':['history-lesson-generator']};
+    subj.forEach(sj=>{
+      if((s.keywords||[]).some(k=>k.includes(sj.name)||sj.name.includes(k))){sc+=5;why.push(sj.name)}
+      if((subjSkill[sj.name]||[]).includes(s.id)){sc+=14;why.push('学科主线:'+sj.name)}
+    });
+    if(intent.some(it=>['解题讲题','讲解教学'].includes(it.name))&&s.category==='subject'){sc+=6;why.push('讲解类')}
+    // 形式匹配
+    form.forEach(f=>{const fm={'竖屏 9:16':['竖屏','9:16','短视频'],'横屏 16:9':['横屏','16:9'],'交互网页':['网页','HTML','交互'],'配音字幕':['字幕','配音','双语','配音字幕']};
+      if((fm[f.name]||[]).some(k=>(s.output||'').includes(k)||(s.keywords||[]).includes(k))){sc+=2;why.push(f.name)}});
+    sc += s.rating*0.5;
+    return {s,sc,why:[...new Set(why)]};
+  }).sort((a,b)=>b.sc-a.sc);
+  const max=scored[0]?.sc||1;
+  return {top:scored.slice(0,3).map(x=>({...x,pct:Math.max(35,Math.round(x.sc/max*100))})),subj,intent,form};
+}
+const R_EX=[
+  '把这道物理受力分析题做成带配音和字幕的讲题微课',
+  '给初二学生讲光的反射定律，4分钟，白板手绘风',
+  '把这首古诗做成国风短片，要配音配乐',
+  '输入英语单词做速记动画视频'
+];
+$('#rExamples').innerHTML=R_EX.map(x=>`<span class="ex">${x}</span>`).join('');
+$('#rExamples').onclick=e=>{if(e.target.classList.contains('ex')){$('#rInput').value=e.target.textContent}};
+$('#rClear').onclick=()=>{$('#rInput').value='';$('#rResult').innerHTML=resultEmpty('✦','输入需求后，这里显示 AI 为你挑选的技能<br>与推荐工作流')};
+function resultEmpty(icon,text){return `<div class="empty"><div class="big">${icon}</div>${text}</div>`}
+$('#rRun').onclick=()=>{
+  const p=$('#rInput').value.trim();
+  if(!p){toast('请先描述你的微课需求');return}
+  const r=route(p);const best=r.top[0].s;
+  const intentTags=[
+    ...r.subj.slice(0,2).map(x=>`<span class="intent sub">学科 · ${x.name}</span>`),
+    ...r.intent.slice(0,2).map(x=>`<span class="intent">意图 · ${x.name}</span>`),
+    ...r.form.slice(0,2).map(x=>`<span class="intent">形式 · ${x.name}</span>`)
+  ].join('')||'<span class="intent">通用需求</span>';
+  const matches=r.top.map((x,i)=>`<div class="match"><div class="rk">${i+1}</div><div class="info">
+      <div class="nm">${esc(x.s.name)} <span style="font-size:11px;color:#94a3b8;font-weight:500">${esc(x.s.id)}</span></div>
+      <div class="rs">匹配：${esc(x.why.slice(0,6).join('、')||'综合适配')} · ${esc(x.s.bestFor)}</div></div>
+      <div class="score"><div class="pct">${x.pct}%</div><div class="bar"><i style="width:${x.pct}%"></i></div></div></div>`).join('');
+  // 组合工作流
+  const steps=[];
+  steps.push(`用 <b>${best.name}</b> 生成主线视频`);
+  if(r.intent.some(x=>['字幕转录','剪辑混剪'].includes(x.name))||p.includes('剪辑'))steps.push('用 <b>video-mix-edit（通用视频混剪）</b> 做掐头去尾、转场、字幕、BGM');
+  if(p.includes('字幕')||p.includes('配音'))steps.push('字幕如需校对，用 <b>baocut-translation-win</b> 精修');
+  if(p.includes('下载')||p.includes('素材'))steps.push('先用 <b>SHY-downloader</b> 下载素材（注意版权）');
+  steps.push('成片逐句核对学科术语与字幕');
+  const flow=`<div class="flow"><h4>◆ 推荐工作流</h4>${steps.map((s,i)=>`<div class="step"><b>${i+1}</b><span>${s}</span></div>`).join('')}</div>`;
+  const prompt=`请用「${best.name}」技能（技能目录：${best.path}）制作一个微课。\n\n需求如下：\n${p}\n\n请按该技能的标准流程执行，输出：${best.output}。`;
+  $('#rResult').innerHTML=`<div class="intent-tags">${intentTags}</div>${matches}${flow}
+    <div class="sec"><div class="lbl" style="font-size:11px;font-weight:800;color:#7c3aed;margin:16px 0 7px">可直接使用的提示词</div>
+      <textarea class="prompt-out" id="rPrompt" readonly>${esc(prompt)}</textarea>
+      <div class="row"><button class="btn ghost sm" id="rCopy">复制提示词</button></div></div>`;
+    $('#rCopy').onclick=()=>copy($('#rPrompt').value);
+};
+// Qwen 增强（走本地服务）
+$('#rRunAI').onclick=async()=>{
+  const p=$('#rInput').value.trim();
+  if(!p){toast('请先描述你的微课需求');return}
+  $('#rResult').innerHTML=resultEmpty('☁','正在调用 Qwen 深度分析…<br>请确保本地服务已启动且配置了 DASHSCOPE_API_KEY');
+  try{
+    const res=await fetch('/api/route?q='+encodeURIComponent(p));
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const d=await res.json();
+    if(d.error)throw new Error(d.error);
+    const matches=(d.recommendations||[]).map((x,i)=>`<div class="match"><div class="rk">${i+1}</div><div class="info">
+      <div class="nm">${esc(x.name)} <span style="font-size:11px;color:#94a3b8;font-weight:500">${esc(x.id)}</span></div>
+      <div class="rs">${esc(x.reason||x.best_for||'')}</div></div>
+      <div class="score"><div class="pct">${x.match||''}${x.match?'%':''}</div></div></div>`).join('');
+    const flow=d.workflow?`<div class="flow"><h4>◆ Qwen 推荐工作流</h4>${d.workflow.map((s,i)=>`<div class="step"><b>${i+1}</b><span>${esc(s)}</span></div>`).join('')}</div>`:'';
+    $('#rResult').innerHTML=`<div class="intent-tags"><span class="intent sub">${esc(d.mode||'Qwen')}</span>
+      ${(d.subjects||[]).map(x=>`<span class="intent sub">学科 · ${esc(x)}</span>`).join('')}
+      ${(d.intents||[]).map(x=>`<span class="intent">意图 · ${esc(x)}</span>`).join('')}</div>${matches}${flow}`;
+  }catch(e){
+    $('#rResult').innerHTML=resultEmpty('☁','Qwen 增强不可用：'+esc(e.message)+'<br>请启动本地服务（启动工作台.bat）并配置密钥，或改用本地智能推荐。');
+  }
+};
+
+/* ---------- 全自动剪辑：提示词解析 ---------- */
+function parseEdit(p){
+  const get=(re,d)=>{const m=p.match(re);return m?m[1].trim():d};
+  return {
+    purpose: get(/(给|面向)([^，。；]{2,30}?)(看|听|用)/,'未指明 → 默认通用 learners') ,
+    duration: get(/(控制在?|时长|不超过)?\s*(\d+\s*分钟内?|\d+\s*秒)/,'按内容自适应'),
+    subject: get(/(讲|讲讲|重点讲|主题是|关于)([^，。；]{2,25})/,'自动识别'),
+    subtitle: /字幕/.test(p)?(/字号大|大一点/.test(p)?'中文字幕 · 大字号':'中文字幕'):'不加字幕',
+    bgm: /背景音乐|BGM|配乐/.test(p)?(/别盖过|不要盖|轻快/.test(p)?'轻快 BGM · 音量压低':'加 BGM'):'不加 BGM',
+    cut: /口误|停顿|卡壳|重复/.test(p)?'删除停顿/口误/重复':'仅按字幕切分',
+    transition: /转场/.test(p)?'xfade 转场':'fade 默认转场',
+    ratio: /竖屏|9:16/.test(p)?'9:16 竖屏':(/横屏|16:9/.test(p)?'16:9 横屏':'自动统一'),
+    ending: get(/结尾(留|保留)?\s*(\d+\s*秒[^，。；]*)/,'常规结尾')
+  };
+}
+function buildShellPlan(par,folder){
+  return `{
+  "resolution": "${par.ratio.includes('9:16')?'1080x1920':par.ratio.includes('16:9')?'1920x1080':'1920x1080'}",
+  "transition": "${par.transition.includes('xfade')?'fade':'fade'}",
+  "transition_duration": 0.5,
+  "subtitle": { "enabled": ${/字幕/.test(par.subtitle)}, "language": "zh", "engine": "faster-whisper" },
+  "bgm": { "file": "bgm.mp3", "volume": 0.12 },
+  "strip_silence": ${/口误|停顿/.test(par.cut)},
+  "segments": [
+    { "file": "素材文件夹里的视频按文件名顺序排列", "trim": {"start": 0, "end": null} }
+  ],
+  "cta": { "text": "感谢观看", "duration": 2 }
+}`;
+}
+const E_EX=[
+  '给初二学生看的课后复习微课，讲光的反射定律，4分钟内。重点保留入射角等于反射角、法线画法、两个生活例子。开头停顿口误剪掉，加中文字幕字号大，配轻快BGM别盖过人声，结尾留3秒黑屏。',
+  '把这段10分钟录课剪成3分钟竖屏短视频，去掉卡壳和重复，加字幕',
+  '这几个实验片段按时间顺序混剪，加转场和字幕，配个轻松的背景音乐'
+];
+$('#eExamples').innerHTML=E_EX.map(x=>`<span class="ex">${x}</span>`).join('');
+$('#eExamples').onclick=e=>{if(e.target.classList.contains('ex'))$('#eInput').value=e.target.textContent};
+$('#eClear').onclick=()=>{$('#eInput').value='';$('#ePath').value='';$('#eResult').innerHTML=resultEmpty('✂','输入要求后，这里展示解析出的剪辑参数<br>与可直接执行的命令')};
+$('#eRun').onclick=()=>{
+  const p=$('#eInput').value.trim(),folder=$('#ePath').value.trim();
+  if(!p){toast('请先描述剪辑要求');return}
+  const par=parseEdit(p);
+  const params=Object.entries(par).map(([k,v])=>`<div class="param"><div class="k">${({purpose:'用途受众',duration:'时长',subject:'主题',subtitle:'字幕',bgm:'配乐',cut:'去口误',transition:'转场',ratio:'画幅',ending:'结尾'})[k]}</div><div class="v">${esc(v)}</div></div>`).join('');
+  const dir=folder||'你的素材文件夹';
+  const versions=par.ratio.includes('9:16')?'9:16,16:9':'16:9';
+  const cmd=`python auto_mix.py --dir "${dir}" --output "微课成片.mp4" --versions ${versions} --transition ${par.transition.includes('xfade')?'slideup':'fade'} --transition-duration 0.5 --per-clip 6 --preset edu${/字幕/.test(par.subtitle)?'':' --no-subtitle'}`;
+  const plan=buildShellPlan(par,folder);
+  $('#eResult').innerHTML=`<h4 style="font-size:13px;color:#7c3aed;margin-bottom:4px">解析出的剪辑参数</h4>
+    <div class="params">${params}</div>
+    <h4 style="font-size:13px;color:#7c3aed;margin:16px 0 7px">执行命令（在 视频工作台 目录运行）</h4>
+    <div class="code" id="eCmd">${esc(cmd)}</div>
+    <div class="row">
+      <button class="btn ghost sm" id="eCopyCmd">复制命令</button>
+      <button class="btn" id="eExec" style="background:linear-gradient(120deg,#db2777,#f43f5e);padding:9px 16px;font-size:12px">▶ 直接执行出片</button>
+    </div>
+    <h4 style="font-size:13px;color:#7c3aed;margin:16px 0 7px">结构化剪辑方案（plan.json 草稿）</h4>
+    <div class="code" id="ePlan" style="max-height:180px;overflow:auto">${esc(plan)}</div>
+    <div class="row"><button class="btn ghost sm" id="eCopyPlan">复制方案</button></div>
+    <div class="notice">"直接执行出片"需启动本地服务（双击 启动工作台.bat）。也可手动运行 <b>auto_edit.py "你的要求" --dir 素材夹</b>。成片在素材文件夹内。</div>`;
+  $('#eCopyCmd').onclick=()=>copy(cmd);
+  $('#eCopyPlan').onclick=()=>copy(plan);
+  $('#eExec').onclick=async()=>{
+    if(!folder){toast('请先填写素材文件夹路径');return}
+    const btn=$('#eExec');btn.disabled=true;btn.textContent='⏳ 剪辑中…';
+    try{
+      const res=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({prompt:p,dir:folder,bgm:'',dry:false})});
+      const d=await res.json();
+      if(d.error)throw new Error(d.error);
+      const tail=(d.out||'').split('\n').filter(Boolean).slice(-16).join('\n');
+      $('#eResult').insertAdjacentHTML('beforeend',`<div class="flow"><h4>◆ 剪辑输出（code:${d.code}）</h4><div class="code" style="max-height:220px;overflow:auto">${esc(tail)}</div></div>`);
+      toast(d.code===0?'剪辑完成，成片在素材文件夹':'剪辑结束，请查看输出');
+    }catch(e){toast('执行失败：'+e.message+'(请启动本地服务)')}
+    btn.disabled=false;btn.textContent='▶ 直接执行出片';
+  };
+};
+
+/* ---------- 初始化 ---------- */
+render();
+</script>
+</body>
+</html>
